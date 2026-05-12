@@ -1,0 +1,135 @@
+# df-heylou-gemini-extension Configuration [CRUX-MK]
+#
+# Welle-39 LLM Sub-Funktion Extension: HeyLou als Sub-Funktion in Gemini Function-Calling.
+
+df_id: df-heylou-gemini-extension
+df_name: HeyLou-Sub-Function-Gemini
+version: 0.1.0-SKELETON
+domain: travel-hospitality-llm-extension
+welle_introduced: welle-39
+type: foundation-df
+crux-mk: true
+
+provider: gemini
+provider_api: gemini-function-calling
+provider_model_default: gemini-2.5-pro
+function_schema_format: json-function-declarations
+
+# === LLM Providers ===
+llm_providers:
+  - gemini-2.5-pro
+  - gemini-1.5-pro
+
+# === HeyLou Capability-Set ===
+heylou_capabilities:
+  - search_hotels
+  - get_rates
+  - compare_otas
+  - book_direct        # K_0-relevant (Real-Booking)
+  - optimize_revenue   # W40 Stub
+
+# === K11-K16 ===
+k11_cascade_isolation: hard
+failure_blast_radius: 1
+dependency_dlq_strategy: per-operation-jsonl
+
+k12_distillation_resistance:
+  output_feeds_into_training: false
+  provenance_required_in_output: true
+  non_llm_validation_layer: true
+
+k13_pre_action_verification:
+  enabled: true
+  external_anchor_type: vendor_api
+  external_anchor_validation_frequency: daily
+  pre_action_domain_check: true
+  pre_action_backup_check: false      # Extension hat keine DB
+  pre_action_blast_radius_check: true
+  k0_q0_filter_enabled: true          # book_direct ist K_0
+
+k14_human_override:
+  override_complexity: single_command
+  martin_review_cadence: weekly
+  bus_factor_handover_drilled: false
+  hardened_promotion_requires_phronesis_ticket: true
+
+k15_entropy_budget:
+  entropy_added_loc_estimate: 700
+  entropy_added_concepts:
+    - GeminiExtension
+    - GeminiAuthHandler
+    - GeminiAdapterOrchestrator
+    - HEYLOU_FUNCTION_DEFINITIONS
+  entropy_justified_by_rho: 30000     # EUR/J Schaetzung: HeyLou-Reach via Gemini-Users
+  entropy_subtractive_potential: 0
+
+k16_concurrent_spawn_protection: both
+lock_dir: /tmp/df-heylou-gemini-extension.lock
+lock_stale_age_h: 6
+engine_pgrep_check: true
+lock_release_on: EXIT_INT_TERM
+
+# === LC1-LC5 ===
+lose_coupling:
+  LC1_graceful_degradation:
+    degradation_modes:
+      - full                          # Real-Gemini-API + HeyLou-Backends live
+      - degraded_no_real_api          # ENV=false -> Mock-Responses
+      - degraded_no_backends          # Backends down -> Mock-Responses
+      - standalone_mock               # Komplettes Mock-Fallback
+    degradation_test_required: true
+
+  LC2_direct_mode:
+    direct_mode_available: true
+    direct_mode_capability: 0.4       # Ohne Real-Backends: 40% (Mock-Capabilities)
+    direct_mode_trigger: "DF_HEYLOU_GEMINI_EXT_ENABLED!=true OR backend_unreachable"
+
+  LC3_circuit_breaker:
+    circuit_breaker_timeout_s: 30
+    circuit_breaker_open_threshold: 3
+    circuit_breaker_half_open_test_interval_s: 300
+
+  LC4_failure_isolation:
+    state_externalization: true
+    idempotent_operations: true       # search_hotels, get_rates, compare_otas idempotent
+    dependency_dlq_separate: true
+
+  LC5_health_check:
+    health_check_dependencies: []     # standalone, Backends optional
+    health_check_degraded_score: 0.4
+    health_check_endpoint_or_file: branch-hub/state/df-heylou-gemini-extension-health.json
+
+# === Audit Trail ===
+audit_dir: audit/
+audit_logs:
+  - gemini-function-calls.jsonl
+  - gemini-auth.jsonl
+loop_reports_dir: runs/loop-reports/
+
+# === ENV-Var-Gated Real-Integration ===
+env_vars:
+  DF_HEYLOU_GEMINI_EXT_ENABLED: false
+  GEMINI_API_KEY: ""
+  DF_HEYLOU_GEMINI_PHRONESIS_TICKET: ""
+  DF_HEYLOU_GEMINI_HMAC_SECRET: ""
+  DF_HEYLOU_GEMINI_TENANT_ID: hildesheim
+  DF_HEYLOU_GEMINI_TIMEOUT_S: 30
+
+# === Promotion-Pfad ===
+promotion_path:
+  current_tier: SKELETON
+  target_tier: PRE-PRODUCTION-CONDITIONAL
+  pflicht_aktionen_welle_40:
+    - Cross-LLM-Wargame mit Codex+Gemini+Copilot
+    - Failure-Injection-Test-Pack >=7 Tests
+    - Real-Gemini-API Pilot mit Sandbox-Backend
+    - Live-Wiring zu W36 PMS-Adapter + W37 OTA-Adapter
+    - Hildesheim-Pilot 30 Tage Real-Operation
+
+# === Cascade-Hebel-Invarianten ===
+cascade_invariants:
+  orthogonal: "Extension operiert nur auf Gemini-Function-Call-Routing-Scope"
+  kanonisch: "frozen dataclass ExtensionResponse mit source/provenance/hash"
+  monoton: "Operations idempotent, kein State-Aufbau cross-call"
+  persistent: "JSONL Audit-Log per function-call + LoopReport-JSON"
+  bounded: "per-operation timeout 30s, max 30 Tool-Uses pro Run"

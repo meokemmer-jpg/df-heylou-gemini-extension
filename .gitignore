@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.local
+audit/*.jsonl
+runs/*.json
+runs/*.log
+runs/loop-reports/
+/tmp/
+STOP.flag
+*.lock
+.DS_Store
