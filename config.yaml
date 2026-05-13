@@ -10,6 +10,21 @@ welle_introduced: welle-39
 type: foundation-df
 crux-mk: true
 
+default_action:
+  description: "HeyLou Sub-Function in Gemini Function-Calling - Travel/Hospitality-Domain-Queries beantworten via gemini-2.5-pro mit HeyLou-Knowledge-Context"
+  rho_per_run_eur: 60
+  rho_validation_source: unvalidated
+  block_gates:
+    - gate_id: K12
+      block_reason: "Distillation-Resistance: Gemini-Output darf nicht zurueck in Gemini-Training (Privacy-Concern)"
+      false_block_cost_eur: 40
+      legitimate_block_condition: "provenance_required_in_output=false ODER non_llm_validation_layer fehlt"
+    - gate_id: K13_PAV
+      block_reason: "Pre-Action-Verification: Gemini-API-Key validity + env_tag (dev/prod)"
+      false_block_cost_eur: 30
+      legitimate_block_condition: "GEMINI_API_KEY fehlt ODER Production-Mode ohne PHRONESIS_TICKET"
+  graceful_degradation_path: "Fallback auf Ollama-Local fuer Hospitality-Domain-Queries (reduzierte Genauigkeit, aber Internet-unabhaengig)"
+
 provider: gemini
 provider_api: gemini-function-calling
 provider_model_default: gemini-2.5-pro
