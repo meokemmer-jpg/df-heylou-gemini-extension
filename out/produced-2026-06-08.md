@@ -1,47 +1,26 @@
 # df-heylou-gemini-extension — PRODUKTION [CRUX-MK]
-*2026-06-08T01:28:12.445712+00:00 | ollama-local/kemmer-70b-ctx8k*
+*2026-06-08T23:43:13.450258+00:00 | ollama-local/kemmer-14b-ctx8k*
 
-# df-heylou-gemini-extension
-## Mission: HeyLou als Sub-Funktion in Gemini Function-Calling
+## df-heylou-gemini-extension [CRUX-MK]
 
-Die Dark Factory `df-heylou-gemini-extension` integriert HeyLou als Sub-Fun
-Sub-Funktion in die Gemini Function-Calling-API. Diese Integration erweiter
-erweitert den Reach von HeyLou durch die Nutzung der Gemini Plattform und e
-ermöglicht es Gemini Nutzern, direkt über das Chat Interface Zugriff auf He
-HeyLou Funktionen zu haben.
+### Übersicht
 
-### Stack:
-- **Gemini-2.5-Pro / Gemini-1.5-Pro API**
-- HeyLou-API-Backend (search_hotels, get_rates, compare_otas, book_direct, 
-optimize_revenue)
+Die Dark Factory `df-heylou-gemini-extension` integriert die Funktionen von HeyLou in das Gemini Function-Calling-API-Framework, um eine direkte und effiziente Benutzerschnittstelle für Hotelbuchungen und verwandte Dienste zu erstellen. Diese Kombination ermöglicht es Gemini Nutzern, den gesamten Reisevorgang direkt über ein Chat-Interface abzuwickeln.
 
-### Beschreibung:
-Die Integration von HeyLou in die Gemini Function-Calling-API ermöglicht ei
-eine nahtlose Interaktion zwischen den beiden Plattformen. Durch die Nutzun
-Nutzung der Gemini API können Nutzer direkt auf die Funktionen von HeyLou z
-zugreifen, ohne die Notwendigkeit, separate Anwendungen zu öffnen oder umst
-umständliche Login-Prozesse durchlaufen zu müssen.
+### Stack
 
-### Funktions-Capability Set:
+Die Integration verwendet folgende Technologien:
+- **Gemini-2.5-Pro API**: Eine fortschrittliche Sprachmodell-API für komplexere Funktionen und Interaktionen.
+- **HeyLou APIs**:
+  - `search_hotels(location, dates, preferences)`: Sucht Hotels basierend auf gegebener Lokalisierung, Buchungsdaten und Vorlieben im Travel Knowledge Graph von HeyLou.
+  - `get_rates(hotel_id, date_range)`: Berechnet Verfügbarkeit und Preise für ein Hotel über den Property Management System (PMS)/Revenue Management System (RMS).
+  - `compare_otas(hotel_id, dates)`: Vergleicht die Kompensationsstrategien von verschiedenen Online Travel Agencies (OTAs).
+  - `book_direct(hotel_id, room_type, guest, dates)`: Erstellt eine direkte Buchung für ein Hotelzimmer ohne zusätzliche Gebühren.
+  - `optimize_revenue(hotel_id)`: Enthält einen Stub für zukünftige Revenue-Optimierungsfunktionen.
 
-| **Function** | **Beschreibung** | **Backend** |
-| --- | --- | --- |
-| `search_hotels(location, dates, preferences)` | Hotel-Suche im Travel Kno
-Knowledge Graph von HeyLou | df-heylou-travel-domain |
-| `get_rates(hotel_id, date_range)` | Verfügbarkeit und Preise für ein Hote
-Hotel | df-pms-mews-adapter (Welle 36) |
-| `compare_otas(hotel_id, dates)` | Kompensationsvergleich durch OTAs | df-
-df-ota-* Adapters (Welle 37) |
-| `book_direct(hotel_id, room_type, guest, dates)` | Direktes Buchen von Ho
-Hotelräumen | df-heylou-travel-domain |
-| `optimize_revenue(hotel_id)` | Revenue Optimierung | Welle 40 (nachgeordn
-(nachgeordnet) |
+### Bereitstellungsmuster
 
-### Bereitstellungsmuster:
-Gemini-LLM sendet Anfragen an unsere Extension, welche diese dann auf die e
-entsprechenden HeyLou-API Backends routen. Dies geschieht über ein JSON Sch
-Schema Tool Declaration.
-
+Gemini Function-Calling sendet Anfragen an die `df-heylou-gemini-extension`, welche diese dann auf entsprechende HeyLou-API Backends routet. Das Vorgehen erfolgt über ein JSON-Schema Tool Declaration:
 ```python
 tools = [{"function_declarations": HEYLOU_FUNCTION_DEFINITIONS}]
 response = gemini_client.generate_content(prompt, tools=tools)
@@ -50,105 +29,60 @@ for part in response.candidates[0].content.parts:
         result = extension.handle_function_call(part.function_call)
 ```
 
-### Sandbox-Standard:
-- `DF_HEYLOU_GEMINI_EXT_ENABLED=false` → Mock-Responses (HeyLou Travel Know
-Knowledge Graph synthetisch)
-- `DF_HEYLOU_GEMINI_EXT_ENABLED=true` + `PHRONESIS_TICKET` + `GEMINI_API_KE
-`GEMINI_API_KEY` → Real-Mode
+### Sandbox-Standard
 
-### Architektur:
-Die Architektur der df-heylou-gemini-extension besteht aus den folgenden Ko
-Komponenten:
+Der Betrieb der Extension läuft standardmäßig im Mock-Modus. Um den echten Modus zu aktivieren, müssen die Umgebungsvariablen `DF_HEYLOU_GEMINI_EXT_ENABLED` auf 'true' gesetzt werden, ein gültiges `PHRONESIS_TICKET` und eine gültige `GEMINI_API_KEY` bereitgestellt sein.
 
-*   Gemini-LLM: Die Gemini Large Language Model Komponente, die Anfragen an
-an unsere Extension sendet.
-*   Extension: Unsere Extension, die Anfragen von Gemini-LLM empfängt und a
-auf die entsprechenden HeyLou-API Backends routet.
-*   HeyLou-API Backends: Die verschiedenen Backends von HeyLou, die für die
-die Suche nach Hotels, die Verfügbarkeit und Preise, den Kompensationsvergl
-Kompensationsvergleich durch OTAs, das direkte Buchen von Hotelräumen und d
-die Revenue Optimierung verantwortlich sind.
+### Architektur
 
-### Audit-Logger:
-Um die Sicherheit und Integrität der Daten zu gewährleisten, wird ein Audit
-Audit-Logger implementiert. Dieser Logger protokolliert alle Anfragen und A
-Antworten zwischen Gemini-LLM und den HeyLou-API Backends.
+Die Architektur der Integration umfasst mehrere Komponenten:
+```
+Gemini-LLM → functionCall → GeminiExtension.handle_function_call()
+                              ├── search_hotels    → df-heylou-travel-domain
+                              ├── get_rates        → df-pms-mews-adapter
+                              ├── compare_otas     → df-ota-* adapters
+                              ├── book_direct      → df-heylou-travel-domain (K_0)
+                              └── optimize_revenue → W40-Stub
+                              ↓
+                          AuditLogger (HMAC-SHA256 JSONL)
+```
+Die Komponenten sind für spezifische Funktionen verantwortlich und senden ihre Ergebnisse an einen AuditLogger, um eine detaillierte Überwachung zu ermöglichen.
 
-### Konfiguration:
-Die Konfiguration der df-heylou-gemini-extension erfolgt über eine YAML-Dat
-YAML-Datei. In dieser Datei werden die notwendigen Parameter wie die API-Sc
-API-Schlüssel, die Endpunkte und die Authentifizierungsdaten konfiguriert.
+### K11-K16 + LC1-LC5
 
-### Testen:
-Das Testen der df-heylou-gemini-extension erfolgt durch eine Kombination au
-aus automatisierten Tests und manuellen Tests. Die automatisierten Tests we
-werden mit Hilfe von Pytest durchgeführt, während die manuellen Tests von e
-einem qualifizierten Tester durchgeführt werden.
+Diese Best Practices und Sicherheitsrichtlinien sind in der `config.yaml`-Datei dokumentiert. Insbesondere wird die K13 Pre-Action-Verification via `auth_handler.verify_phronesis_ticket()` verwendet, um sicherzustellen, dass nur berechtigte Anfragen verarbeitet werden.
 
-### Deployment:
-Das Deployment der df-heylou-gemini-extension erfolgt durch einen Continuou
-Continuous Integration/Continuous Deployment (CI/CD) Prozess. Dieser Prozes
-Prozess gewährleistet, dass die Extension automatisch getestet und bereitge
-bereitgestellt wird, sobald Änderungen an dem Code vorgenommen werden.
+### Sandbox-Konfiguration
 
-### Cross-DF-Coupling:
-Die df-heylou-gemini-extension ist so konzipiert, dass sie leicht mit ander
-anderen Dark Factories gekoppelt werden kann. Dies ermöglicht es, die Funkt
-Funktionen von HeyLou mit anderen Plattformen und Anwendungen zu integriere
-integrieren und somit den Reach und die Funktionalität von HeyLou zu erweit
-erweitern.
+Die Sandbox-Konfiguration kann über folgende Umgebungsvariablen gesteuert werden:
+- **DF_HEYLOU_GEMINI_EXT_ENABLED**: Aktiviert die Integration (Standard: `false` für Mock-Modus).
+- **PHRONESIS_TICKET**: Ein gültiger Phronesis-Ticket-Wert, um Sicherheit und Authentifizierung zu gewährleisten.
+- **GEMINI_API_KEY**: Eine gültige Gemini-API-Schlüssel-ID zur Zugriffsberechtigung.
 
-### AllFly-Integration:
-Die Integration von AllFly in die df-heylou-gemini-extension ist geplant. A
-AllFly ist eine B2B Corporate Travel Booking Plattform, die es Unternehmen 
-ermöglicht, ihre Geschäftsreisen zu buchen und zu verwalten. Durch die Inte
-Integration von AllFly kann die df-heylou-gemini-extension den Nutzern eine
-eine umfassende Lösung für ihre Geschäftsreisebedürfnisse anbieten.
+### Tests
 
-### edyn-Integration:
-Die Integration von edyn in die df-heylou-gemini-extension ist ebenfalls ge
-geplant. edyn ist ein Anbieter von Serviced Apartments und bietet Unternehm
-Unternehmen eine Alternative zu traditionellen Hotels an. Durch die Integra
-Integration von edyn kann die df-heylou-gemini-extension den Nutzern eine w
-weitere Option für ihre Unterkünfte anbieten.
+Die Integration kann durch die folgenden Befehle getestet werden:
+```bash
+pytest tests/ -v
+```
+Dies führt alle vorhandenen Testfälle aus und liefert eine detaillierte Auswertung.
 
-### Welle-19-Lokal-Competitive-Map:
-Die Welle-19-Lokal-Competitive-Map ist ein Tool, das es ermöglicht, die lok
-lokalen Wettbewerber in verschiedenen Märkten zu identifizieren und zu anal
-analysieren. Durch die Nutzung dieser Map kann die df-heylou-gemini-extensi
-df-heylou-gemini-extension den Nutzern eine umfassende Übersicht über die l
-lokalen Wettbewerber anbieten und somit ihre Entscheidungen bei der Auswahl
-Auswahl von Unterkünften und Reisezielen unterstützen.
+### Cross-DF-Coupling (W36/W37 Backends)
 
-### LaunchAgent:
-Der LaunchAgent ist ein Tool, das es ermöglicht, die df-heylou-gemini-exten
-df-heylou-gemini-extension automatisch zu starten und zu stoppen. Dieses To
-Tool kann konfiguriert werden, um die Extension bei Bedarf zu starten und z
-zu stoppen, und somit die Verfügbarkeit und Leistung der Extension zu gewäh
-gewährleisten.
+Die Integration läuft derzeit im Lazy-Import Modus. In den kommenden Welle 40 wird die Revenue Optimization Funktion implementiert, um vollständige Funktionalität zu gewährleisten.
 
-### Tests und Qualitätssicherung:
-Um die Qualität und Funktionalität der df-heylou-gemini-extension zu gewähr
-gewährleisten, werden regelmäßige Tests und Qualitätssicherungsmaßnahmen du
-durchgeführt. Diese Maßnahmen umfassen automatisierte Tests, manuelle Tests
-Tests und Code-Reviews.
+### Sandbox-Dienst
 
-### Ergebnisse:
-Die Ergebnisse der df-heylou-gemini-extension sind vielfältig und umfassend
-umfassend. Durch die Integration von HeyLou in die Gemini Function-Calling-
-Function-Calling-API kann die Extension den Nutzern eine umfassende Lösung 
-für ihre Reisebedürfnisse anbieten. Die Extension bietet eine Vielzahl von 
-Funktionen, darunter die Suche nach Hotels, die Verfügbarkeit und Preise, d
-den Kompensationsvergleich durch OTAs, das direkte Buchen von Hotelräumen u
-und die Revenue Optimierung.
+Der LaunchAgent ist konfiguriert, um das System alle zwei Stunden (StartInterval: 7200s) neu zu starten und bei der Initialisierung zu laden. Die Konfiguration wird in der Plist-Datei `scripts/com.kemmer.df-heylou-gemini-extension.plist` gespeichert.
 
-### Fazit:
-Insgesamt ist die df-heylou-gemini-extension eine umfassende Lösung für die
-die Reisebedürfnisse von Unternehmen und Einzelpersonen. Durch die Integrat
-Integration von HeyLou in die Gemini Function-Calling-API kann die Extensio
-Extension den Nutzern eine Vielzahl von Funktionen anbieten, die ihre Reise
-Reiseplanung und -buchung erleichtern. Die Extension ist so konzipiert, das
-dass sie leicht mit anderen Dark Factories gekoppelt werden kann, und biete
-bietet somit eine hohe Flexibilität und Anpassungsfähigkeit. Durch regelmäß
-regelmäßige Tests und Qualitätssicherungsmaßnahmen wird die Funktionalität 
-und Leistung der Extension gewährleistet.
+### Fazit
+
+Die Integration von HeyLou-Funktionen in das Gemini Function-Calling-API-Modell erweitert den Funktionsumfang des Chatbots und ermöglicht eine reibungslose Buchung von Reisehotels sowie eine detaillierte Analyse der OTA-Vergleichsmöglichkeiten. Die Kombination unterstützt sowohl die Nutzer in der Entscheidungsfindung als auch in der effizienten Erledigung von Aufgaben im Bereich des B2B Corporate Travel Bookings.
+
+### Anhang: Verwendete Datenquellen und Methodik
+
+- **AllFly.io** (WARGAME-VENDOR-ALLFLY-2026-04-24.md): Informationen über den Markenstandort, die Finanzierung, Produkte sowie Technologie.
+- **Welle-19 — 25-Sprachen Lokal Competitive Map** (WELLE-19-25-SPRACHEN-LOKAL-COMPETITIVE-MAP-2026-04-20.md): Lokale Hauptgegner und ihre Strategien in verschiedenen Markten.
+- **METHODIK-KATALOG-V10-WELLE-16-MASTER** (METHODIK-KATALOG-V10-WELLE-16-MASTER-2026-05-04.md): Struktur für die Implementierung der Cross-DF-Coupling und weiterer Verbesserungen.
+
+Diese Dokumentation stellt eine umfassende Einführung in die Funktionalität und Integration von `df-heylou-gemini-extension` dar, um sicherzustellen, dass alle Best Practices und Technologien korrekt implementiert sind.
