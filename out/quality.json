@@ -1,9 +1,9 @@
 {
   "df": "df-heylou-gemini-extension",
-  "ts": "2026-07-02T06:12:40.851039+00:00",
+  "ts": "2026-07-03T00:50:06.317225+00:00",
   "maturity": "TESTED",
   "maturity_level": 4,
   "evidence_grade": 4,
-  "wargame_verdict": "CONDITIONAL",
+  "wargame_verdict": null,
   "crux": "[CRUX-MK]"
 }
