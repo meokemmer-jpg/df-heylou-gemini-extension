@@ -1,0 +1,6 @@
+{
+  "verdict": "HOLDS",
+  "reason": "Der Test ruft den echten Adapter mit einem legitimen Suchrequest und einem adversarialen Delete-Request auf und prüft den funktional anderen Output: valide search_hotels-Route versus fail-closed rejection.",
+  "ts": "2026-07-31T00:15:45.376071+00:00",
+  "attempts": 1
+}
