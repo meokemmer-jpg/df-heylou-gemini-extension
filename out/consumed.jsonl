@@ -110,3 +110,4 @@
 {"ts": "2026-09-07T07:37:08.808311+00:00", "producer": "df-heylou-gemini-extension", "by": "df-artifact-collector", "purpose": "index", "crux": "[CRUX-MK]", "valid": true}
 {"ts": "2026-09-07T08:07:45.278252+00:00", "producer": "df-heylou-gemini-extension", "by": "df-artifact-collector", "purpose": "index", "crux": "[CRUX-MK]", "valid": true}
 {"ts": "2026-09-07T08:39:36.076102+00:00", "producer": "df-heylou-gemini-extension", "by": "df-artifact-collector", "purpose": "index", "crux": "[CRUX-MK]", "valid": true}
+{"ts": "2026-09-27T11:07:57.749133+00:00", "producer": "df-heylou-gemini-extension", "by": "df-domain-nlm-sync", "purpose": "nlm-board", "crux": "[CRUX-MK]", "valid": true}
